@@ -1,6 +1,7 @@
 #include <thread>
 #include <iostream>
 #include <vector>
+#include <numeric>
 #include <boost/hash2/xxhash.hpp>
 #include "boost-hash-wrapper.hpp"
 #include "shapes.hpp"
@@ -42,21 +43,32 @@ int main(int argc, char * argv[])
   const size_t tries = std::stoull(argv[1]);
   const size_t seed = argc == 3 ? std::stoull(argv[2]) : 0;
 
-  size_t radius = 0, threads = 0;
-  std::cin >> radius >> threads;
+  size_t radius = 0, threads_amount = 0;
+  std::cin >> radius >> threads_amount;
   if (!std::cin || radius <= 0)
   {
     std::cerr << "kldsf\n";
     return 1;
   }
 
-  Segment segment({radius * 2, radius * 2, {-1.0 * radius, -1.0 * radius}}, radius);
-
   std::cout << "Let's do this\n";
 
-  thread_func(tries, seed, segment);
+  std::vector< std::thread > threads;
+  //std::vector< long double > results(threads_amount);
 
-  //std::vector< bb_t > tiles;
+  size_t seg_width = radius * 2.0 / threads_amount;
+  for (size_t i = 0; i < threads_amount; ++i)
+  {
+    Segment segment({seg_width, radius * 2, {-1.0 * radius + seg_width * i, -1.0 * radius}}, radius);
+    threads.push_back(std::thread{&thread_func, tries, seed, segment});
+  }
+
+  for (auto & th : threads)
+  {
+    th.join();
+  }
+
+  //std::cout << std::accumulate(results.begin(), results.end(), 0);
 
   return 0;
 }
