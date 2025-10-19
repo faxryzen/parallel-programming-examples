@@ -1,5 +1,5 @@
 # My first Makefile
-# Version 0.1
+# Version 0.2
 
 CC=g++
 
@@ -13,23 +13,41 @@ CPPFLAGS += -std=c++17 -Wall -Wextra -Werror -Wno-missing-fielsd -Werror=vla -pt
 OUTDIR=out
 TASKS := $(filter-out $(OUTDIR) Makefile,$(wildcard *))
 
-$(OUTDIR):
-	mkdir -p $(OUTDIR)
-
 define find_task
 $(firstword $(filter $(1)% %$(1) %$(1)%,$(TASKS)))
 endef
 
-build-%: $(OUTDIR)
-	$(eval DIR=$(call find_task,$*))
-	$(eval TARGET=$(OUTDIR)/$(DIR))
-	$(eval SRC=$(wildcard $(DIR)/*.cpp))
-	mkdir -p $(TARGET)
-	$(CC) $(CPPFLAGS) -o $(TARGET)/prog $(SRC)
+build-%:
+	@$(eval DIR=$(call find_task,$*))
+	@$(eval TARGET=$(OUTDIR)/$(DIR)/prog)
+	@$(eval SRC=$(wildcard $(DIR)/*.cpp))
+	@if [ -z "$(SRC)" ]; then \
+		exit 1; \
+	fi; \
+	NEEDS_REBUILD=0; \
+	if [ ! -f "$(TARGET)" ]; then \
+		NEEDS_REBUILD=1; \
+	else \
+		for f in $(SRC); do \
+			if [ "$$f" -nt "$(TARGET)" ]; then \
+				NEEDS_REBUILD=1; \
+				break; \
+			fi; \
+		done; \
+	fi; \
+	if [ $$NEEDS_REBUILD -eq 1 ]; then \
+		mkdir -p "$(dir $(TARGET))"; \
+		if ! $(CC) $(CPPFLAGS) -o "$(TARGET)" $(SRC); then \
+			rm -rf "$(dir $(TARGET))"; \
+			exit 1; \
+		fi; \
+	fi
 
-run-%: build-%
-	$(eval DIR=$(call find_task,$*))
-	./$(OUTDIR)/$(DIR)/prog
+run-%:
+	@$(eval DIR=$(call find_task,$*))
+	@$(eval TARGET=$(OUTDIR)/$(DIR)/prog)
+	@$(MAKE) --no-print-directory build-$*
+	@$(TARGET) $(ARGS)
 
 clean:
-	rm -rf $(OUTDIR)
+	@rm -rf $(OUTDIR)
