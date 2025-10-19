@@ -4,46 +4,41 @@
 
 namespace sav
 {
+  struct point_t
+  {
+    long double x = 0;
+    long double y = 0;
+  };
+
   struct bb_t
   {
     size_t width = 0;
     size_t height = 0;
-  };
-
-  struct point_t
-  {
-    size_t x = 0;
-    size_t y = 0;
-  };
-
-  struct circle_t
-  {
-    size_t radius = 0;
     point_t center = {0, 0};
   };
 
-    class Tile
+  class Segment
   {
   public:
-    Tile(bb_t size, circle_t circle):
-      bb_(size),
-      cc_(circle)
+    Segment(bb_t bounding_box, size_t radius_of_circle):
+      bbx_(bounding_box),
+      rad_(radius_of_circle)
     {}
     bool isPointIn(const point_t p) const
     {
-      double dist = std::sqrt(std::pow(p.x - cc_.center.x, 2) + std::pow(p.y - cc_.center.y, 2));
-      if (dist >= cc_.radius)
+      long double dist = std::sqrt(std::pow(p.x, 2) + std::pow(p.y, 2));
+      if (dist > rad_)
       {
         return false;
       }
       return true;
     }
-    bb_t getBoundingBox() const
+    bb_t getBBox() const
     {
-      return bb_;
+      return bbx_;
     }
   private:
-    bb_t bb_;
-    circle_t cc_;
+    bb_t bbx_;
+    size_t rad_;
   };
 }

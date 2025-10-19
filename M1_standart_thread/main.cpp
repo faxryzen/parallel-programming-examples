@@ -5,13 +5,18 @@
 #include "boost-hash-wrapper.hpp"
 #include "shapes.hpp"
 
-void thread_func(const size_t tries, sav::Tile tile)
+void thread_func(const size_t tries, const size_t seed, sav::Segment seg)
 {
   sav::HashWrapper< size_t, boost::hash2::xxhash_64 > prng;
+  size_t count = 0;
   for (size_t i = 0; i < tries; ++i)
   {
-    std::cout << prng(i) % tile.getBoundingBox().height;
+    size_t res = prng(i + seed);
+    long double x = (res % (seg.getBBox().width * 1000)) * 0.001 + seg.getBBox().center.x;
+    long double y = ((res / 1000000) % (seg.getBBox().height * 1000)) * 0.001 + seg.getBBox().center.y;
+    count += seg.isPointIn({x, y}) ? 1 : 0;
   }
+  std::cout << static_cast< double >(count) / tries * 4 << '\n';
 }
 
 int main(int argc, char * argv[])
@@ -39,20 +44,19 @@ int main(int argc, char * argv[])
 
   size_t radius = 0, threads = 0;
   std::cin >> radius >> threads;
-  if (!std::cin)
+  if (!std::cin || radius <= 0)
   {
     std::cerr << "kldsf\n";
     return 1;
   }
 
+  Segment segment({radius * 2, radius * 2, {-1.0 * radius, -1.0 * radius}}, radius);
 
+  std::cout << "Let's do this\n";
 
-
+  thread_func(tries, seed, segment);
 
   //std::vector< bb_t > tiles;
 
-  sav::HashWrapper< size_t, boost::hash2::xxhash_64 > seed_gen;
-  size_t res = seed_gen(seed);
-  std::cout << tries << ' ' << res << '\n';
   return 0;
 }
