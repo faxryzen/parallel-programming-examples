@@ -37,6 +37,25 @@ void calc_monte_carlo(double * res, size_t id, size_t tries, size_t seed, size_t
   *res = static_cast< double >(count) / tries;
 }
 
+void task_process(std::pair< size_t, size_t > task, double * res, size_t tries, size_t seed)
+{
+  std::vector< double > task_results(task.second);
+  std::vector< std::thread > threads;
+  size_t current_tries = tries / task.second;
+
+  for (size_t j = 0; j < task.second; ++j)
+  {
+    threads.push_back(std::thread{&calc_monte_carlo, &tasks_results[j], j, current_tries, seed, tasks.first});
+  }
+
+  for (auto & th : threads)
+  {
+    th.join();
+  }
+
+  *res = std::accumulate(results.begin(), results.end(), 0) / task.second;
+}
+
 int main(int argc, char * argv[])
 {
   using namespace sav;
@@ -81,32 +100,23 @@ int main(int argc, char * argv[])
 
   std::cout << "Let's do this\n";
 
-  std::vector< std::vector< double > > tasks_results(tasks.size());
-  std::vector< std::vector< std::thread > > threads;
+  std::vector< double > tasks_results(tasks.size());
+  std::vector< std::thread > tasks_threads;
 
   for (size_t i = 0; i < tasks.size(); ++i)
   {
-    std::vector< std::thread > threads;
-    tasks_results[i].resize(threads_amount);
-    size_t current_tries = tries / threads_amount;
-    if (!current_tries)
-    {
-      std::cerr << "Very small amount of tries of thread amount to big\n";
-      return 3;
-    }
-
-    for (size_t j = 0; j < threads_amount; ++j)
-    {
-      threads.push_back(std::thread{&calc_monte_carlo, &tasks_results[i][j], j, current_tries, seed, tasks[i].first});
-    }
+    tasks_threads.push_back(std::thread{&task_process, &tasks_results[i], tasks[i], tries, seed});
   }
 
-  //for (auto & th : threads)
-  //{
-  //  th.join();
-  //}
+  for (auto & th : tasks_threads)
+  {
+    th.join();
+  }
 
-  //std::cout << std::accumulate(results.begin(), results.end(), 0);
+  for (size_t i = 0; i < tasks.size(); ++i)
+  {
+    std::cout << "For the "<< i << ": " << tasks_results[i] << '\n'
+  }
 
   return 0;
 }

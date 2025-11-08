@@ -8,7 +8,7 @@ CC=g++
 # -Wextra  
 # fuck it, im bored
 
-CPPFLAGS += -std=c++17 -I./common -Wall -Wextra -Werror -Wno-missing-fielsd -Werror=vla -pthread
+CPPFLAGS += -std=c++17 -I./common -I/usr/local/include -Wall -Wextra -Werror -Wno-missing-fielsd -Werror=vla -pthread
 
 OUTDIR=out
 TASKS := $(filter-out $(OUTDIR) Makefile,$(wildcard *))
